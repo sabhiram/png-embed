@@ -3,6 +3,7 @@ package pngembed
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"hash/crc32"
 	"io/ioutil"
@@ -28,29 +29,31 @@ func errIfNotSubStr(s, sub []byte) error {
 // buildTxtChunk builds a given text chunk based on a key and value with the
 // correct CRC.
 func buildTxtChunk(key, value string) []byte {
-	// Add our own!
+	// Header
 	typ := `tEXt`
 	hdrb := append([]byte{}, []byte(typ)...)
 
+	// Payload
 	bb := []byte{}
 	bb = append(bb, []byte(key)...)
 	bb = append(bb, 0)
 	bb = append(bb, []byte(value)...)
 
-	// The size should include the key, the value and the null space
+	// Size
 	szb := make([]byte, 4)
 	binary.BigEndian.PutUint32(szb, uint32(len(bb)))
 
-	// The chunk header goes before the payload
+	// Prepend the header to the payload
 	bb = append(hdrb, bb...)
 
-	// The CRC is calculated for the header + payload
+	// CRC32
 	c := make([]byte, 4)
 	crcval := crc32.ChecksumIEEE(bb)
 	binary.BigEndian.PutUint32(c, crcval)
 
 	// Prepend the size now that we have the crc
 	bb = append(szb, bb...)
+
 	// Append the CRC to the new chunk
 	bb = append(bb, c...)
 
@@ -94,4 +97,15 @@ func Embed(fpath, key, value string) ([]byte, error) {
 	out = append(out, buf.Bytes()...)
 
 	return out, nil
+}
+
+// EmbedMap accepts a path to a png and a key along with a map which will be
+// serialized from JSON (using JSON tags) and converted to a string that can
+// be stored in the new slice of bytes.
+func EmbedMap(fpath, key string, m interface{}) ([]byte, error) {
+	data, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return Embed(fpath, key, string(data))
 }

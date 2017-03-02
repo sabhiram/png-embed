@@ -5,14 +5,13 @@ import (
 	"io/ioutil"
 	"log"
 
-	"git.ottoq.com/playground/pngembed"
+	"github.com/sabhiram/png-embed"
 )
 
 var (
 	inputFile  string
 	outputFile string
 	key        string
-	value      string
 )
 
 func handleErr(err error) {
@@ -27,9 +26,6 @@ func main() {
 	if len(key) == 0 {
 		log.Fatalf("No key specified!\n")
 	}
-	if len(value) == 0 {
-		log.Fatalf("No value specified!\n")
-	}
 	if len(inputFile) == 0 {
 		log.Fatalf("No input file specified!\n")
 	}
@@ -37,7 +33,15 @@ func main() {
 		log.Fatalf("No output file specified!\n")
 	}
 
-	data, err := pngembed.Embed(inputFile, key, value)
+	s := struct {
+		Foo string `json:"Foo"`
+		Bar string `json:"Bar"`
+	}{
+		Foo: "FooValue",
+		Bar: "BarValue",
+	}
+
+	data, err := pngembed.EmbedMap(inputFile, key, s)
 	handleErr(err)
 
 	handleErr(ioutil.WriteFile(outputFile, data, 777))
@@ -52,7 +56,4 @@ func init() {
 
 	flag.StringVar(&key, "key", "", "key name for the data to inject")
 	flag.StringVar(&key, "k", "", "key name for the data to inject")
-
-	flag.StringVar(&value, "value", "", "value for the data to inject")
-	flag.StringVar(&value, "v", "", "value for the data to inject")
 }
