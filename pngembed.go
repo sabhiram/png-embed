@@ -1,4 +1,7 @@
+// Package pngembed helps embed key-value data into a png image.
 package pngembed
+
+////////////////////////////////////////////////////////////
 
 import (
 	"bytes"
@@ -9,11 +12,15 @@ import (
 	"io/ioutil"
 )
 
+////////////////////////////////////////////////////////////
+
 var (
 	pngMagic = []byte{137, 80, 78, 71, 13, 10, 26, 10}
 )
 
-// Returns nil if sub is contained in s
+////////////////////////////////////////////////////////////
+
+// Returns nil if sub is contained in s, an error otherwise.
 func errIfNotSubStr(s, sub []byte) error {
 	if len(sub) > len(s) {
 		return errors.New("substring larger than parent")
@@ -60,8 +67,11 @@ func buildTxtChunk(key, value string) []byte {
 	return bb
 }
 
-// Embed returns a embedded png image's data stream into the file specified
-// by `fpath'.  Returns error if something goes wrong!
+////////////////////////////////////////////////////////////
+
+// Embed injects a key-value strings as a tEXt section in a
+// png image. The return value is a slice of bytes containing
+// the embedded text, or an error if suitable.
 func Embed(fpath, key, value string) ([]byte, error) {
 	out := []byte{}
 
@@ -99,6 +109,8 @@ func Embed(fpath, key, value string) ([]byte, error) {
 	return out, nil
 }
 
+////////////////////////////////////////////////////////////
+
 // EmbedMap accepts a path to a png and a key along with a map which will be
 // serialized from JSON (using JSON tags) and converted to a string that can
 // be stored in the new slice of bytes.
@@ -109,3 +121,5 @@ func EmbedMap(fpath, key string, m interface{}) ([]byte, error) {
 	}
 	return Embed(fpath, key, string(data))
 }
+
+////////////////////////////////////////////////////////////
