@@ -1,7 +1,7 @@
 // Package pngembed helps embed key-value data into a png image.
 package pngembed
 
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 import (
 	"bytes"
@@ -12,13 +12,13 @@ import (
 	"io/ioutil"
 )
 
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 var (
 	pngMagic = []byte{137, 80, 78, 71, 13, 10, 26, 10}
 )
 
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // Returns nil if sub is contained in s, an error otherwise.
 func errIfNotSubStr(s, sub []byte) error {
@@ -67,12 +67,12 @@ func buildTxtChunk(key, value string) []byte {
 	return bb
 }
 
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-// Embed injects a key-value strings as a tEXt section in a
+// EmbedKeyValue injects a key-value strings as a tEXt section in a
 // png image. The return value is a slice of bytes containing
 // the embedded text, or an error if suitable.
-func Embed(fpath, key, value string) ([]byte, error) {
+func EmbedKeyValue(fpath, key, value string) ([]byte, error) {
 	out := []byte{}
 
 	// Read the image if possible
@@ -109,7 +109,7 @@ func Embed(fpath, key, value string) ([]byte, error) {
 	return out, nil
 }
 
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // EmbedMap accepts a path to a png and a key along with a map which will be
 // serialized from JSON (using JSON tags) and converted to a string that can
@@ -119,7 +119,7 @@ func EmbedMap(fpath, key string, m interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Embed(fpath, key, string(data))
+	return EmbedKeyValue(fpath, key, string(data))
 }
 
-////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
