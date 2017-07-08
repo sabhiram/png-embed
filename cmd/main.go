@@ -33,7 +33,7 @@ func fatalOnError(err error) {
 func main() {
 	data, err := pngembed.EmbedKeyValue(inputFile, key, value)
 	fatalOnError(err)
-	fatalOnError(ioutil.WriteFile(outputFile, data, 755))
+	fatalOnError(ioutil.WriteFile(outputFile, data, 777))
 }
 
 func init() {

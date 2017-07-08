@@ -22,6 +22,16 @@ To inject `in.png` with the key value pair "fruit": "apple" and generate out.png
 $ go run cmd/main.go -input in.png -key fruit -value apple -output out.png
 ```
 
+You can then use something like [pngcheck](http://www.libpng.org/pub/png/apps/pngcheck.html) to verify that we did the right thing:
+```shell
+$ go run cmd/main.go -input ~/Desktop/test.png -key fruit -value apple -output out.png
+$ pngcheck -t out.png
+File: out.png (10785 bytes)
+fruit:
+    apple
+OK: out.png (225x225, 8-bit palette, non-interlaced, 78.7%).
+```
+
 ## Usage
 
 Two ways to use this library:
@@ -40,7 +50,7 @@ func MyAwesomeFunction(imgPath, outPath string) error {
     if err != nil {
         return err
     }
-    return ioutil.WriteFile(outPath, data, 755)
+    return ioutil.WriteFile(outPath, data, 777)
 }
 ```
 
@@ -68,7 +78,7 @@ func MyAwesomeFunction(imgPath, outPath string) error {
     if err != nil {
         return err
     }
-    return ioutil.WriteFile(outPath, data, 755)
+    return ioutil.WriteFile(outPath, data, 777)
 }
 ```
 
