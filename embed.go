@@ -1,4 +1,4 @@
-// Package pngembed helps embed key-value data into a png image.
+// Package pngembed embeds key-value data into a png image.
 package pngembed
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"hash/crc32"
 	"io/ioutil"
 )
@@ -35,7 +36,7 @@ func errIfNotSubStr(s, sub []byte) error {
 
 // buildTxtChunk builds a given text chunk based on a key and value with the
 // correct CRC.
-func buildTxtChunk(key, value string) []byte {
+func buildTxtChunk(key string, value []byte) []byte {
 	// Header
 	typ := `tEXt`
 	hdrb := append([]byte{}, []byte(typ)...)
@@ -44,7 +45,7 @@ func buildTxtChunk(key, value string) []byte {
 	bb := []byte{}
 	bb = append(bb, []byte(key)...)
 	bb = append(bb, 0)
-	bb = append(bb, []byte(value)...)
+	bb = append(bb, value...)
 
 	// Size
 	szb := make([]byte, 4)
@@ -62,64 +63,77 @@ func buildTxtChunk(key, value string) []byte {
 	bb = append(szb, bb...)
 
 	// Append the CRC to the new chunk
-	bb = append(bb, c...)
-
-	return bb
+	return append(bb, c...)
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-// EmbedKeyValue injects a key-value strings as a tEXt section in a
-// png image. The return value is a slice of bytes containing
-// the embedded text, or an error if suitable.
-func EmbedKeyValue(fpath, key, value string) ([]byte, error) {
+// embed verifies that the input data slice actually describes a PNG image, and
+// appends the respective (key, value) pair into its `tExt` section(s).
+func embed(data []byte, k string, v []byte) ([]byte, error) {
 	out := []byte{}
-
-	// Read the image if possible
-	data, err := ioutil.ReadFile(fpath)
-	if err != nil {
-		return nil, err
-	}
 	buf := bytes.NewBuffer(data)
 
-	// Magic number
+	// Magic number.
 	d := buf.Next(len(pngMagic))
 	out = append(out, d...)
-	err = errIfNotSubStr(pngMagic, d)
+	err := errIfNotSubStr(pngMagic, d)
 	if err != nil {
 		return nil, err
 	}
 
 	// Extract header length, the header type should always be the first, we
-	// inject our data right after this.
+	// inject our custom text data right after this.
 	d = buf.Next(4)
 	out = append(out, d...)
 	sz := binary.BigEndian.Uint32(d)
 
-	// Extract the header tag, data, and CRC (for the header)
+	// Extract the header tag, data, and CRC (for the header).
 	d = buf.Next(int(sz + 8))
 	out = append(out, d...)
 
-	// Append our chunk
-	out = append(out, buildTxtChunk(key, value)...)
+	// Append our chunk.
+	out = append(out, buildTxtChunk(k, v)...)
 
-	// Add the rest of the actual palette and data info
-	out = append(out, buf.Bytes()...)
-
-	return out, nil
+	// Add the rest of the actual palette and data info.
+	return append(out, buf.Bytes()...), nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// EmbedMap accepts a path to a png and a key along with a map which will be
-// serialized from JSON (using JSON tags) and converted to a string that can
-// be stored in the new slice of bytes.
-func EmbedMap(fpath, key string, m interface{}) ([]byte, error) {
-	data, err := json.Marshal(m)
+// Embed accepts a stream of bytes which represent the raw PNG image data, and
+// the `key` to store the interface `v` under.  `v` is treated as JSON which
+// when Marshal'd will result in either a JSON string representing a map, or
+// the serialized value of a primitive type (int, string, float etc). Returns
+// the raw bytes that represent the modified PNG data.
+func Embed(data []byte, k string, v interface{}) ([]byte, error) {
+	var (
+		err error
+		val []byte
+	)
+
+	switch vt := v.(type) {
+	case int, uint:
+		val = []byte(fmt.Sprintf("%d", vt))
+	case float32, float64:
+		val = []byte(fmt.Sprintf("%f", vt))
+	case string:
+		val = []byte(vt)
+	default:
+		val, err = json.Marshal(v)
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	return EmbedKeyValue(fpath, key, string(data))
+	return embed(data, k, val)
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// EmbedFile is like `Embed` but accepts the path to a PNG file instead of the
+// raw png data.
+func EmbedFile(fp, k string, v interface{}) ([]byte, error) {
+	data, err := ioutil.ReadFile(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	return Embed(data, k, v)
+}

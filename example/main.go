@@ -4,11 +4,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
-	"github.com/sabhiram/png-embed"
+	pngembed "github.com/sabhiram/png-embed"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,25 +22,19 @@ var (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func fatalOnError(err error) {
+func main() {
+	data, err := pngembed.EmbedFile(inputFile, key, value)
+	if err == nil {
+		err = ioutil.WriteFile(outputFile, data, 777)
+	}
+
 	if err != nil {
-		log.Fatalf("Error: %s\n", err.Error())
+		fmt.Printf("Fatal error: %s\n", err.Error())
+		os.Exit(1)
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-func main() {
-	data, err := pngembed.EmbedKeyValue(inputFile, key, value)
-	fatalOnError(err)
-	fatalOnError(ioutil.WriteFile(outputFile, data, 777))
-}
-
 func init() {
-	log.SetFlags(0)
-	log.SetPrefix("")
-	log.SetOutput(os.Stdout)
-
 	flag.StringVar(&inputFile, "input", "", "input file name for the png")
 	flag.StringVar(&outputFile, "output", "out.png", "output file name for the png")
 	flag.StringVar(&key, "key", "TEST_KEY", "key name for the data to inject")
@@ -48,8 +42,7 @@ func init() {
 
 	flag.Parse()
 	if len(inputFile) == 0 {
-		log.Fatalf("No input file specified!\n")
+		fmt.Printf("Fatal error: No input file specified!\n")
+		os.Exit(1)
 	}
 }
-
-////////////////////////////////////////////////////////////////////////////////
