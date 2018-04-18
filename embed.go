@@ -1,4 +1,5 @@
 // Package pngembed embeds key-value data into a png image.
+// For reference: https://en.wikipedia.org/wiki/Portable_Network_Graphics.
 package pngembed
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,36 +35,46 @@ func errIfNotSubStr(s, sub []byte) error {
 	return nil
 }
 
-// buildTxtChunk builds a given text chunk based on a key and value with the
-// correct CRC.
-func buildTxtChunk(key string, value []byte) []byte {
-	// Header
-	typ := `tEXt`
-	hdrb := append([]byte{}, []byte(typ)...)
+func isValidChunkType(ct string) bool {
+	for _, v := range []string{
+		// Critical chunks.
+		"IHDR", "PLTE", "IDAT", "IEND",
 
-	// Payload
-	bb := []byte{}
-	bb = append(bb, []byte(key)...)
-	bb = append(bb, 0)
-	bb = append(bb, value...)
+		// Ancillary chunks.
+		"bKGD", "cHRM", "dSIG", "eXIf", "gAMA", "hIST", "iCCP", "iTXt", "pHYs",
+		"sBIT", "sPLT", "sRGB", "sTER", "tEXt", "tIME", "tRNS", "zTXt",
+	} {
+		if v == ct {
+			return true
+		}
+	}
+	return false
+}
 
-	// Size
-	szb := make([]byte, 4)
-	binary.BigEndian.PutUint32(szb, uint32(len(bb)))
+// buildChunk encodes the specified chunk type and data into a png chunk.  If
+// the chunk type is invalid, it is rejected.
+func buildChunk(ct string, data []byte) ([]byte, error) {
+	// -------------------------------------------------------------------
+	// |  Length    |  Chunk Type |       ... Data ...       |    CRC    |
+	// -------------------------------------------------------------------
+	// |  4 bytes   |   4 bytes   |     `Length` bytes       |  4 bytes  |
+	//              |-------------- CRC32'd -----------------|
+	if !isValidChunkType(ct) {
+		return nil, fmt.Errorf("invalid chunk type (%s)", ct)
+	}
 
-	// Prepend the header to the payload
-	bb = append(hdrb, bb...)
+	szbs := make([]byte, 4)
+	binary.BigEndian.PutUint32(szbs, uint32(len(data)))
 
-	// CRC32
-	c := make([]byte, 4)
-	crcval := crc32.ChecksumIEEE(bb)
-	binary.BigEndian.PutUint32(c, crcval)
+	bb := []byte(ct)
+	bb = append(bb, data...)
 
-	// Prepend the size now that we have the crc
-	bb = append(szb, bb...)
+	crcbs := make([]byte, 4)
+	binary.BigEndian.PutUint32(crcbs, crc32.ChecksumIEEE(bb))
 
-	// Append the CRC to the new chunk
-	return append(bb, c...)
+	bb = append(bb, crcbs...)
+
+	return append(szbs, bb...), nil
 }
 
 // embed verifies that the input data slice actually describes a PNG image, and
@@ -90,8 +101,12 @@ func embed(data []byte, k string, v []byte) ([]byte, error) {
 	d = buf.Next(int(sz + 8))
 	out = append(out, d...)
 
-	// Append our chunk.
-	out = append(out, buildTxtChunk(k, v)...)
+	// Append tEXt chunk.
+	chunk, err := buildChunk(`tEXt`, append(append([]byte(k), 0), v...))
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, chunk...)
 
 	// Add the rest of the actual palette and data info.
 	return append(out, buf.Bytes()...), nil
