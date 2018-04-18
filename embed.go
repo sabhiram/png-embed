@@ -1,5 +1,4 @@
 // Package pngembed embeds key-value data into a png image.
-// For reference: https://en.wikipedia.org/wiki/Portable_Network_Graphics.
 package pngembed
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,14 +65,14 @@ func buildChunk(ct string, data []byte) ([]byte, error) {
 	szbs := make([]byte, 4)
 	binary.BigEndian.PutUint32(szbs, uint32(len(data)))
 
-	bb := []byte(ct)
-	bb = append(bb, data...)
+	bb := append([]byte(ct), data...)
 
 	crcbs := make([]byte, 4)
 	binary.BigEndian.PutUint32(crcbs, crc32.ChecksumIEEE(bb))
 
 	bb = append(bb, crcbs...)
 
+	// Prepend the length to the payload.
 	return append(szbs, bb...), nil
 }
 
