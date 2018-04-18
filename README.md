@@ -29,7 +29,7 @@ func main() {
 
     // Encode the key "FOO" with the value "BAR" (string).
     data, _ := pngembed.Embed(bs, "FOO", "BAR")
-    ioutil.WriteFile("sample.png", data, 777)
+    ioutil.WriteFile("sample.png", data, 755)
 }
 ```
 
@@ -48,7 +48,7 @@ import (
 func main() {
     // Encode the key "FOO" with the value "BAR" (string).
     data, _ := pngembed.EmbedFile("sample.png", "FOO", "BAR")
-    ioutil.WriteFile("sample.png", data, 777)
+    ioutil.WriteFile("sample.png", data, 755)
 }
 ```
 
@@ -74,7 +74,7 @@ func main() {
     }
 
     data, _ := pngembed.EmbedFile("sample.png", "FOO", s)
-    ioutil.WriteFile("sample.png", data, 777)
+    ioutil.WriteFile("sample.png", data, 755)
 }
 ```
 
