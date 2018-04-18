@@ -1,5 +1,7 @@
 # PNG Embed
 
+[![Build Status](https://travis-ci.org/sabhiram/png-embed.svg?branch=master)](https://travis-ci.org/sabhiram/png-embed) [![Coverage Status](https://coveralls.io/repos/github/sabhiram/png-embed/badge.svg?branch=master)](https://coveralls.io/github/sabhiram/png-embed?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/sabhiram/png-embed)](https://goreportcard.com/report/github.com/sabhiram/png-embed)
+
 Embed key-value data into png images.
 
 

@@ -76,6 +76,11 @@ func buildChunk(ct string, data []byte) ([]byte, error) {
 	return append(szbs, bb...), nil
 }
 
+func buildTextChunk(data []byte) []byte {
+	bs, _ := buildChunk(`tEXt`, data)
+	return bs
+}
+
 // embed verifies that the input data slice actually describes a PNG image, and
 // appends the respective (key, value) pair into its `tExt` section(s).
 func embed(data []byte, k string, v []byte) ([]byte, error) {
@@ -101,11 +106,7 @@ func embed(data []byte, k string, v []byte) ([]byte, error) {
 	out = append(out, d...)
 
 	// Append tEXt chunk.
-	chunk, err := buildChunk(`tEXt`, append(append([]byte(k), 0), v...))
-	if err != nil {
-		return nil, err
-	}
-	out = append(out, chunk...)
+	out = append(out, buildTextChunk(append(append([]byte(k), 0), v...))...)
 
 	// Add the rest of the actual palette and data info.
 	return append(out, buf.Bytes()...), nil
