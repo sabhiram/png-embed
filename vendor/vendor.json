@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "Cb/lVMc31KWqaoALQkBI6d+NRls=",
+			"path": "github.com/sabhiram/pngr",
+			"revision": "2df49b015d4b7249b0f5f8cf437554bcca27ad0f",
+			"revisionTime": "2018-04-19T04:34:07Z"
+		}
+	],
+	"rootPath": "github.com/sabhiram/png-embed"
+}
