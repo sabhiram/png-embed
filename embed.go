@@ -10,7 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"io/ioutil"
+	"strings"
+
+	"github.com/sabhiram/pngr"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,4 +155,31 @@ func EmbedFile(fp, k string, v interface{}) ([]byte, error) {
 	}
 
 	return Embed(data, k, v)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+func Extract(data []byte) (map[string][]byte, error) {
+	ret := map[string][]byte{}
+
+	r, err := pngr.NewReader(data, &pngr.ReaderOptions{
+		IncludedChunkTypes: []string{`tEXt`},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := r.Next()
+	for ; err == nil; c, err = r.Next() {
+		sz := len(c.Data)
+		pt := strings.Index(string(c.Data), string(0))
+		if pt < sz {
+			ret[string(c.Data[:pt])] = c.Data[pt+1:]
+		}
+	}
+	if err == io.EOF {
+		err = nil
+	}
+
+	return ret, err
 }

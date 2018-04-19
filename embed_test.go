@@ -42,10 +42,10 @@ func TestEmbed(t *testing.T) {
 		{data: []byte{1, 2, 3, 4}, k: "Fail", v: make(chan int), isErr: true},
 
 		// Positive test cases.
-		{data: bs, k: "Key0", v: "Value0", isErr: false},
-		{data: bs, k: "Key1", v: 42, isErr: false},
-		{data: bs, k: "Key2", v: 42.0, isErr: false},
-		{data: bs, k: "Key2", v: struct{}{}, isErr: false},
+		{data: bs, k: "Key", v: "Value0", isErr: false},
+		{data: bs, k: "Key", v: 42, isErr: false},
+		{data: bs, k: "Key", v: 42.0, isErr: false},
+		{data: bs, k: "Key", v: struct{}{}, isErr: false},
 	} {
 		out, err := Embed(tc.data, tc.k, tc.v)
 		if tc.isErr == false {
@@ -75,6 +75,14 @@ func TestEmbed(t *testing.T) {
 		act := len(out)
 		if act != exp {
 			t.Errorf("Expected buffer size %d, got %d\n", exp, act)
+		}
+
+		m, err := Extract(out)
+		fatalIfError(t, err)
+
+		// We should have one key titled "Key".
+		if 1 != len(m) {
+			t.Errorf("Multiple keys found when extracting text records\n")
 		}
 	}
 }
@@ -160,5 +168,15 @@ func TestSubstring(t *testing.T) {
 				t.Errorf("Expected error, got nil!\n")
 			}
 		}
+	}
+}
+
+func TestBadExtract(t *testing.T) {
+	m, err := Extract([]byte{1, 2, 3})
+	if m != nil {
+		t.Errorf("Expected nil reader, got non-nil value\n")
+	}
+	if err == nil {
+		t.Errorf("Expected error, got nil\n")
 	}
 }
