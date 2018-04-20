@@ -84,6 +84,13 @@ func TestEmbed(t *testing.T) {
 		if 1 != len(m) {
 			t.Errorf("Multiple keys found when extracting text records\n")
 		}
+		av, ok := m["Key"]
+		if !ok {
+			t.Errorf("`Key` missing in map\n")
+		}
+		if len(av) != vlen {
+			t.Errorf("Expected value length %d, got %d (%s)", vlen, len(av), av)
+		}
 	}
 }
 
