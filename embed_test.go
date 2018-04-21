@@ -179,11 +179,29 @@ func TestSubstring(t *testing.T) {
 }
 
 func TestBadExtract(t *testing.T) {
-	m, err := Extract([]byte{1, 2, 3})
-	if m != nil {
-		t.Errorf("Expected nil reader, got non-nil value\n")
-	}
+	m1, err := Extract([]byte{1, 2, 3})
 	if err == nil {
 		t.Errorf("Expected error, got nil\n")
+	}
+	if m1 != nil {
+		t.Errorf("Expected nil reader, got non-nil value\n")
+	}
+
+}
+
+func TestExtractFile(t *testing.T) {
+	m1, err := ExtractFile(redPng)
+	fatalIfError(t, err)
+
+	if len(m1) != 0 {
+		t.Errorf("Expected 0 encoded items, got %d\n", len(m1))
+	}
+
+	m2, err := ExtractFile("blue.png")
+	if err == nil {
+		t.Errorf("Expected error, got nil\n")
+	}
+	if m2 != nil {
+		t.Errorf("Expected nil reader, got non-nil value\n")
 	}
 }

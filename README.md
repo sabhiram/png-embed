@@ -80,6 +80,9 @@ func main() {
 }
 ```
 
+### `Extract(data []byte) (map[string][]byte, error)`
+
+TODO
 
 ## Sample application
 

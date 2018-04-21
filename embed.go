@@ -118,11 +118,10 @@ func embed(data []byte, k string, v []byte) ([]byte, error) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Embed accepts a stream of bytes which represent the raw PNG image data, and
-// the `key` to store the interface `v` under.  `v` is treated as JSON which
-// when Marshal'd will result in either a JSON string representing a map, or
-// the serialized value of a primitive type (int, string, float etc). Returns
-// the raw bytes that represent the modified PNG data.
+// Embed processes a stream of raw PNG data, and encodes the specified key-value
+// pair into a `tEXt` chunk.  The resultant PNG byte-stream is returned, or an
+// error.  The interface `v` is serialized to known types and then to JSON if
+// all else fails.
 func Embed(data []byte, k string, v interface{}) ([]byte, error) {
 	var (
 		err error
@@ -146,8 +145,7 @@ func Embed(data []byte, k string, v interface{}) ([]byte, error) {
 	return embed(data, k, val)
 }
 
-// EmbedFile is like `Embed` but accepts the path to a PNG file instead of the
-// raw png data.
+// EmbedFile is like `Embed` but accepts the path to a PNG file.
 func EmbedFile(fp, k string, v interface{}) ([]byte, error) {
 	data, err := ioutil.ReadFile(fp)
 	if err != nil {
@@ -159,6 +157,8 @@ func EmbedFile(fp, k string, v interface{}) ([]byte, error) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Extract processes a stream of raw PNG data, and returns a map of `tEXt`
+// records encoded by this library.
 func Extract(data []byte) (map[string][]byte, error) {
 	ret := map[string][]byte{}
 
@@ -182,4 +182,14 @@ func Extract(data []byte) (map[string][]byte, error) {
 	}
 
 	return ret, err
+}
+
+// ExtractFile is like `Extract` but accepts the path to a PNG file.
+func ExtractFile(fp string) (map[string][]byte, error) {
+	data, err := ioutil.ReadFile(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	return Extract(data)
 }
