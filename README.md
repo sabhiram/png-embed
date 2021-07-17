@@ -82,7 +82,25 @@ func main() {
 
 ### `Extract(data []byte) (map[string][]byte, error)`
 
-TODO
+```go
+package main
+
+import (
+    "io/ioutil"
+    pngembed "github.com/sabhiram/png-embed"
+)
+
+func main() {
+    bs, _ := ioutil.ReadFile("sample.png")
+    data, err := pngembed.Extract(bs)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+    println(string(data))
+}
+```
 
 ## Sample application
 
